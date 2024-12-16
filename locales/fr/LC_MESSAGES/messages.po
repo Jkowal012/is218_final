@@ -1,0 +1,25 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+msgid "User not found"
+msgstr "Utilisateur introuvable"
+
+msgid "Email already exists"
+msgstr "L'email existe déjà"
+
+msgid "Failed to create user"
+msgstr "Échec de la création de l'utilisateur"
+
+msgid "Account locked due to too many failed login attempts."
+msgstr "Compte verrouillé en raison de trop nombreuses tentatives de connexion échouées."
+
+msgid "Incorrect email or password."
+msgstr "Adresse e-mail ou mot de passe incorrect."
+
+msgid "Invalid or expired verification token"
+msgstr "Jeton de vérification invalide ou expiré"
+
+msgid "Email verified successfully"
+msgstr "E-mail vérifié avec succès"
