@@ -6,6 +6,10 @@ from app.database import Database
 from app.dependencies import get_settings
 from app.routers import user_routes
 from app.utils.api_description import getDescription
+from app.utils.localization import get_preferred_language, DEFAULT_LANGUAGE
+from fastapi import Request
+from starlette.middleware.base import BaseHTTPMiddleware
+
 app = FastAPI(
     title="User Management",
     description=getDescription(),
@@ -27,6 +31,13 @@ app.add_middleware(
     allow_methods=["*"],  # Allowed HTTP methods
     allow_headers=["*"],  # Allowed HTTP headers
 )
+
+@app.middleware("http")
+async def set_language_middleware(request: Request, call_next):
+    lang = get_preferred_language(request)
+    request.state.language = lang
+    response = await call_next(request)
+    return response
 
 @app.on_event("startup")
 async def startup_event():
