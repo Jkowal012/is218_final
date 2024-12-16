@@ -18,6 +18,7 @@ Key Highlights:
 - Utilizes OAuth2PasswordBearer for securing API endpoints, requiring valid access tokens for operations.
 """
 
+from app.utils.localization import _
 from builtins import dict, int, len, str
 from datetime import timedelta
 from uuid import UUID
@@ -52,7 +53,7 @@ async def get_user(user_id: UUID, request: Request, db: AsyncSession = Depends(g
     """
     user = await UserService.get_by_id(db, user_id)
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(status_code=404, detail=_(request, "User not found"))
 
     return UserResponse.model_construct(
         id=user.id,
@@ -89,7 +90,7 @@ async def update_user(user_id: UUID, user_update: UserUpdate, request: Request, 
     user_data = user_update.model_dump(exclude_unset=True)
     updated_user = await UserService.update(db, user_id, user_data)
     if not updated_user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=_(request, "User not found"))
 
     return UserResponse.model_construct(
         id=updated_user.id,
@@ -118,7 +119,7 @@ async def delete_user(user_id: UUID, db: AsyncSession = Depends(get_db), token: 
     """
     success = await UserService.delete(db, user_id)
     if not success:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=_(request, "User not found"))
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -142,11 +143,11 @@ async def create_user(user: UserCreate, request: Request, db: AsyncSession = Dep
     """
     existing_user = await UserService.get_by_email(db, user.email)
     if existing_user:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already exists")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=_(request, "Email already exists"))
     
     created_user = await UserService.create(db, user.model_dump(), email_service)
     if not created_user:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create user")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=_(request, "Failed to create user"))
     
     
     return UserResponse.model_construct(
@@ -197,12 +198,12 @@ async def register(user_data: UserCreate, session: AsyncSession = Depends(get_db
     user = await UserService.register_user(session, user_data.model_dump(), email_service)
     if user:
         return user
-    raise HTTPException(status_code=400, detail="Email already exists")
+    raise HTTPException(status_code=400, detail=_(request, "Email already exists"))
 
 @router.post("/login/", response_model=TokenResponse, tags=["Login and Registration"])
 async def login(form_data: OAuth2PasswordRequestForm = Depends(), session: AsyncSession = Depends(get_db)):
     if await UserService.is_account_locked(session, form_data.username):
-        raise HTTPException(status_code=400, detail="Account locked due to too many failed login attempts.")
+        raise HTTPException(status_code=400, detail=_(request, "Account locked due to too many failed login attempts."))
 
     user = await UserService.login_user(session, form_data.username, form_data.password)
     if user:
@@ -214,12 +215,12 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), session: Async
         )
 
         return {"access_token": access_token, "token_type": "bearer"}
-    raise HTTPException(status_code=401, detail="Incorrect email or password.")
+    raise HTTPException(status_code=401, detail=_(request, "Incorrect email or password."))
 
 @router.post("/login/", include_in_schema=False, response_model=TokenResponse, tags=["Login and Registration"])
 async def login(form_data: OAuth2PasswordRequestForm = Depends(), session: AsyncSession = Depends(get_db)):
     if await UserService.is_account_locked(session, form_data.username):
-        raise HTTPException(status_code=400, detail="Account locked due to too many failed login attempts.")
+        raise HTTPException(status_code=400, detail=_(request, "Account locked due to too many failed login attempts."))
 
     user = await UserService.login_user(session, form_data.username, form_data.password)
     if user:
@@ -231,7 +232,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), session: Async
         )
 
         return {"access_token": access_token, "token_type": "bearer"}
-    raise HTTPException(status_code=401, detail="Incorrect email or password.")
+    raise HTTPException(status_code=401, detail=_(request, "Incorrect email or password."))
 
 
 @router.get("/verify-email/{user_id}/{token}", status_code=status.HTTP_200_OK, name="verify_email", tags=["Login and Registration"])
@@ -243,5 +244,5 @@ async def verify_email(user_id: UUID, token: str, db: AsyncSession = Depends(get
     - **token**: Verification token sent to the user's email.
     """
     if await UserService.verify_email_with_token(db, user_id, token):
-        return {"message": "Email verified successfully"}
-    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired verification token")
+        return {"message": _(request, "Email verified successfully")}
+    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=_(request, "Invalid or expired verification token"))
