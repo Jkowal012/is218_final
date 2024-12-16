@@ -190,3 +190,16 @@ async def test_list_users_unauthorized(async_client, user_token):
         headers={"Authorization": f"Bearer {user_token}"}
     )
     assert response.status_code == 403  # Forbidden, as expected for regular user
+
+@pytest.mark.asyncio
+async def test_get_user_not_found_english(async_client, admin_token):
+    """
+    Test that the 'User not found' message is returned in English by default.
+    """
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    # A non-existent user UUID
+    non_existent_user_id = "00000000-0000-0000-0000-000000000000"
+    response = await async_client.get(f"/users/{non_existent_user_id}", headers=headers)
+    assert response.status_code == 404
+    # Check message is in English by default
+    assert "User not found" in response.json().get("detail", ""), "Default language should be English"
