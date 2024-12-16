@@ -203,3 +203,16 @@ async def test_get_user_not_found_english(async_client, admin_token):
     assert response.status_code == 404
     # Check message is in English by default
     assert "User not found" in response.json().get("detail", ""), "Default language should be English"
+
+@pytest.mark.asyncio
+async def test_get_user_not_found_french(async_client, admin_token):
+    """
+    Test that the 'User not found' message is returned in French when lang=fr is specified.
+    """
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    non_existent_user_id = "00000000-0000-0000-0000-000000000000"
+    # Add ?lang=fr to request
+    response = await async_client.get(f"/users/{non_existent_user_id}?lang=fr", headers=headers)
+    assert response.status_code == 404
+    # Check the message is in French
+    assert "Utilisateur introuvable" in response.json().get("detail", ""), "Message should be in French"
