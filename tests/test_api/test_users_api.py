@@ -234,3 +234,36 @@ async def test_create_user_duplicate_email_french(async_client, verified_user):
     # Check the French translation
     assert "L'email existe déjà" in response.json().get("detail", ""), "Should return French translation for 'Email already exists'."
 
+@pytest.mark.asyncio
+async def test_login_incorrect_password_french(async_client, verified_user):
+    """
+    Test that the 'Incorrect email or password.' message is returned in French when lang=fr is specified.
+    """
+    from urllib.parse import urlencode
+    form_data = {
+        "username": verified_user.email,
+        "password": "WrongPassword!"
+    }
+    response = await async_client.post("/login/?lang=fr", data=urlencode(form_data), headers={"Content-Type": "application/x-www-form-urlencoded"})
+    assert response.status_code == 401
+    # Check the French translation for the error message
+    # English: "Incorrect email or password."
+    # French: "Adresse e-mail ou mot de passe incorrect."
+    assert "Adresse e-mail ou mot de passe incorrect." in response.json().get("detail", ""), "Should return French translation for incorrect password."
+
+    @pytest.mark.asyncio
+async def test_account_locked_french(async_client, locked_user):
+    """
+    Test that the account locked message is returned in French.
+    """
+    from urllib.parse import urlencode
+    form_data = {
+        "username": locked_user.email,
+        "password": "MySuperPassword$1234"
+    }
+    # Try logging in to a locked account with ?lang=fr
+    response = await async_client.post("/login/?lang=fr", data=urlencode(form_data), headers={"Content-Type": "application/x-www-form-urlencoded"})
+    assert response.status_code == 400
+    # English: "Account locked due to too many failed login attempts."
+    # French: "Compte verrouillé en raison de trop nombreuses tentatives de connexion échouées."
+    assert "Compte verrouillé en raison de trop nombreuses tentatives de connexion échouées." in response.json().get("detail", ""), "Should return French translation for account locked message."
