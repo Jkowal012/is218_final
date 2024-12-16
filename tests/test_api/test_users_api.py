@@ -216,3 +216,21 @@ async def test_get_user_not_found_french(async_client, admin_token):
     assert response.status_code == 404
     # Check the message is in French
     assert "Utilisateur introuvable" in response.json().get("detail", ""), "Message should be in French"
+
+@pytest.mark.asyncio
+async def test_create_user_duplicate_email_french(async_client, verified_user):
+    """
+    Test that the 'Email already exists' message is returned in French when lang=fr is specified.
+    """
+    # Create a user with a duplicate email
+    user_data = {
+        "email": verified_user.email,
+        "password": "AnotherPassword123!",
+        "role": "ADMIN"
+    }
+    # No auth needed for /register/ endpoint
+    response = await async_client.post("/register/?lang=fr", json=user_data)
+    assert response.status_code == 400
+    # Check the French translation
+    assert "L'email existe déjà" in response.json().get("detail", ""), "Should return French translation for 'Email already exists'."
+
